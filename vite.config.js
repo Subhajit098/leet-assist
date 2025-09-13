@@ -8,6 +8,10 @@ export default defineConfig({
   // By default , vite outputs hashed filenames(bad for extensions). This ensures files are predictable (index.js, not index-xyz123.js)
   build: {  
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        background: './public/background.js'
+      },
       output: {
         entryFileNames: `[name].js`,
         chunkFileNames: `[name].js`,
