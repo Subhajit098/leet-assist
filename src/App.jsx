@@ -28,6 +28,24 @@ function App() {
 
   // console.log("URL : ",url)
 
+
+  const [dataFromBg,setDataFromBg] = useState('');
+
+  useEffect(()=>{
+    const handleMessageFromBg=(message,sender,sendResponse)=>{
+      if(message.type === "DATA_FROM_BACKGROUND_TO_APP"){
+        setDataFromBg(message.payload);
+        sendResponse({"received" : true});
+      }
+    }
+
+    
+    // receive the API data from the background.js
+    chrome.runtime.onMessage.addListener(handleMessageFromBg);
+    
+    console.log("Data is received from the Background.js", dataFromBg);
+  })
+
   return (
     <div style={{ padding: "1rem", width: "280px" }}>
       <h2>🚀 LeetCode Buddy</h2>

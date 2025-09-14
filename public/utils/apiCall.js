@@ -11,7 +11,7 @@ export async function fetchData(url) {
   try {
     const response = await client.responses.create({
       model: "gpt-4.1-nano-2025-04-14",
-      input: `Please give me proper 6 hints for this leetcode question having URL : ${url} in plain text point wise, which covers all the techniques and methods needed to solve this question. `
+      input: `Please give me proper 6 hints for this leetcode question having URL : ${url} in plain text point wise, which covers all the techniques and methods needed to solve this question. No need to give any heading for each points, just plain text with numbering`
     });
 
     // Safely return the text content
