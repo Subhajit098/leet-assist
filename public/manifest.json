@@ -3,7 +3,7 @@
   "name": "My React Vite Extension",
   "version": "1.0.0",
   "description": "DSA Solver buddy. Only works on LeetCode.",
-  "permissions": ["scripting", "activeTab", "storage"],
+  "permissions": ["scripting", "tabs", "storage"],
   "host_permissions": ["https://leetcode.com/*"],
   "background": {
     "service_worker": "background.js"
