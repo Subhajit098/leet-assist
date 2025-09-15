@@ -14,7 +14,7 @@ async function fetchData(url) {
   try {
     const response = await client.responses.create({
       model: "gpt-4.1-nano-2025-04-14",
-      input: `Please give me proper 6 hints for this leetcode question having URL : ${url} in plain text point wise, which covers all the techniques and methods needed to solve this question. No need to give any heading for each points, just plain text with numbering`
+      input: `Please give me all the proper hints for this leetcode question having URL : ${url} in plain text point wise (seperated by ** in one stretch i.e., in a full paragraph), which covers all the techniques and methods needed to solve this question. No need to mention any extra word or line apart from the hints. I don't want answers like "here is the answers..." . Make it very clear like starting from first hint from ** then ** and continue to the next hints and then ultimately when the hints are finished , casually closing it with ** again. No extra texts of your greeting is needed just the answer `
     });
 
     // Safely return the text content
