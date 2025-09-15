@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 // import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
 
+
+
 // using the tabs.query approach
 const sendConfirmationToContentFromApp = () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -33,10 +35,14 @@ const sendConfirmationToContentFromApp = () => {
 
 function App() {
   const [dataFromBg, setDataFromBg] = useState("");
+  const [clicked, setClicked] = useState(false);
 
   const handleSeeHints = () => {
     // Trigger the message to content.js
     sendConfirmationToContentFromApp();
+    setClicked((prevState)=>{
+      return !prevState;
+    });
   };
 
   useEffect(() => {
@@ -69,7 +75,18 @@ function App() {
       <button onClick={handleSeeHints}>See hints!</button>
 
       <div style={{ marginTop: "1rem" }}>
-        {dataFromBg ? <p>{dataFromBg}</p> : <p>Click the button to fetch hints...</p>}
+        {/* {dataFromBg ? <p>{dataFromBg}</p> : <p>Click the button to fetch hints...</p>} */}
+        {
+          (()=>{
+            if(dataFromBg){
+              <p>{dataFromBg}</p>
+            } else if(!dataFromBg && clicked){
+              <p>Fetching hints .....</p>
+            } else if(!dataFromBg && !clicked){
+              <p>Click the button to fetch hints</p>
+            }
+          })()
+        }
       </div>
     </div>
   );
