@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-const apiKey = import.meta.env.VITE_API_KEY2; // careful with this in extensions!
+const apiKey = import.meta.env.VITE_API_KEY; // careful with this in extensions!
 
 const client = new OpenAI({
   apiKey: apiKey,

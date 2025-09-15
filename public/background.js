@@ -1,59 +1,35 @@
-import OpenAI from "openai";
-const client = new OpenAI({
-    apiKey: import.meta.env.VITE_API_KEY
-});
-import {fetchData} from './utils/apiCall.js'
-import {sendDataToApp} from './utils/sendDataToApp.js'
-
-
-// for testing purposes and to track the responses from API
-let now = new Date();
-let hours = now.getHours();
-let minutes = now.getMinutes();
-let seconds = now.getSeconds();
-// console.log(`The current time is: ${hours}:${minutes}:${seconds}`);
+import { fetchData } from './utils/apiCall.js';
+import { sendDataToApp } from './utils/sendDataToApp.js';
 
 console.log("Background service worker loaded");
-let url;
-let DATA_FROM_API;
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "QUESTION_URL") {
-    url=message.url
-    console.log("📩 Received URL from content.js at :", message.url);
+    const url = message.url;
+    console.log("📩 Received URL from content.js:", url);
 
-
-    // Respond back to the content script
-    sendResponse({ received: true });
-
- 
     // Save the latest URL in chrome.storage
-    chrome.storage.local.set({ latestQuestionUrl: message.url }, () => {
-      console.log("✅ URL saved in storage:", message.url);
+    chrome.storage.local.set({ latestQuestionUrl: url }, () => {
+      console.log("✅ URL saved in storage:", url);
     });
 
-
-    // make the API call here
-
+    // Make the API call
     fetchData(url)
-    .then((data) => {
-      console.log(`Response from AI at time - ${hours} hours,${minutes} minutes,${seconds} seconds : ${data}`);
+      .then((data) => {
+        console.log("✅ Response from AI:", data);
 
-      // send this data to the Pop UP UI (or App.jsx)
-      DATA_FROM_API=data;
-      sendDataToApp(DATA_FROM_API);
-    })
-    .catch((err) => {
-      console.log("Some error occurred:", err);
-    });
+        // Send this data to the Pop-up UI
+        sendDataToApp(data);
 
+        // Respond back to the content script only after async is done
+        sendResponse({ received: true });
+      })
+      .catch((err) => {
+        console.error("❌ Error in fetchData:", err);
+        sendResponse({ received: false, error: String(err) });
+      });
 
-
-    // Keep the message channel open (safe practice in MV3)
+    // IMPORTANT: keep the channel open for async sendResponse
     return true;
   }
-
-  
 });
-
-
-

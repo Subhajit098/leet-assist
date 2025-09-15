@@ -1,59 +1,47 @@
+// App.jsx
 import React, { useEffect, useState } from "react";
+import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
 
 function App() {
+  const [dataFromBg, setDataFromBg] = useState("");
 
+  const handleSeeHints = () => {
+    // Trigger the message to content.js
+    sendConfirmationToContentFromApp();
+  };
 
-  // const [url, setUrl] = useState(null); 
-
-
-  // useEffect(() => {
-  //   // 1. Read the latest URL when popup loads
-  //   chrome.storage.local.get("latestQuestionUrl", (result) => {
-  //     if (result.latestQuestionUrl) {
-  //       console.log("📂 Loaded from storage:", result.latestQuestionUrl);
-  //       setUrl(result.latestQuestionUrl);
-  //     }
-  //   });
-
-  //   // 2. Listen for storage changes (if new URL is stored)
-  //   function handleStorageChange(changes, areaName) {
-  //     if (areaName === "local" && changes.latestQuestionUrl) {
-  //       console.log("🔄 Storage updated:", changes.latestQuestionUrl.newValue);
-  //       setUrl(changes.latestQuestionUrl.newValue);
-  //     }
-  //   }
-
-  //   chrome.storage.onChanged.addListener(handleStorageChange);
-  // }, [url]);
-
-  // console.log("URL : ",url)
-
-
-  const [dataFromBg,setDataFromBg] = useState('');
-
-  useEffect(()=>{
-    const handleMessageFromBg=(message,sender,sendResponse)=>{
-      if(message.type === "DATA_FROM_BACKGROUND_TO_APP"){
+  useEffect(() => {
+    const handleMessageFromBg = (message, sender, sendResponse) => {
+      if (message && message.type === "DATA_FROM_BACKGROUND_TO_APP") {
         setDataFromBg(message.payload);
-        sendResponse({"received" : true});
-      }
-    }
+        // sendResponse to confirm receipt (optional)
+          sendResponse({ received: true });
 
-    
-    // receive the API data from the background.js
+        // no need to return true here since we responded synchronously
+      }
+    };
+
     chrome.runtime.onMessage.addListener(handleMessageFromBg);
-    
-    console.log("Data is received from the Background.js", dataFromBg);
-  })
+
+    return () => {
+      // cleanup
+      try {
+        chrome.runtime.onMessage.removeListener(handleMessageFromBg);
+      } catch (e) {
+        console.warn("Error removing listener:", e);
+      }
+    };
+  }, []); // register once
 
   return (
     <div style={{ padding: "1rem", width: "280px" }}>
       <h2>🚀 LeetCode Buddy</h2>
 
-      {/* Button to trigger injection of content.js and fetch URL */}
-      <button >See hints !</button>
+      <button onClick={handleSeeHints}>See hints!</button>
 
-
+      <div style={{ marginTop: "1rem" }}>
+        {dataFromBg ? <p>{dataFromBg}</p> : <p>Click the button to fetch hints...</p>}
+      </div>
     </div>
   );
 }

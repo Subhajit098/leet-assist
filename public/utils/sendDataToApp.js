@@ -1,15 +1,20 @@
-export function sendDataToApp(data){
-
-    // use the chrome runtime to start a communication
-    chrome.runtime.sendMessage({
-        type : "DATA_FROM_BACKGROUND_TO_APP",
-        payload : data
-    },(response)=>{
-        if(response && response.received){
-            console.log("Data is received from Background.js to App.jsx ---> confirmed by App.jsx")
-        } else {
-            console.log("Not able to receive the data from background.js ---> responded by App.js")
-        }
-    })
-
+// sendDataToApp.js
+export function sendDataToApp(data) {
+  chrome.runtime.sendMessage(
+    {
+      type: "DATA_FROM_BACKGROUND_TO_APP",
+      payload: data,
+    },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn("sendDataToApp lastError:", chrome.runtime.lastError.message);
+        return;
+      }
+      if (response && response.received) {
+        console.log("Data is received by App.jsx (confirmed).");
+      } else {
+        console.log("App.jsx did not confirm receipt:", response);
+      }
+    }
+  );
 }
