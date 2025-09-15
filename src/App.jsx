@@ -2,21 +2,34 @@
 import React, { useEffect, useState } from "react";
 // import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
 
+// using the tabs.query approach
 const sendConfirmationToContentFromApp = () => {
-    chrome.runtime.sendMessage(
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length === 0) {
+      console.warn("⚠️ No active tab found");
+      return;
+    }
+    const activeTabId = tabs[0].id;
+
+    chrome.tabs.sendMessage(
+      activeTabId,
       { type: "CONFIRMATION_FROM_APP_TO_CONTENT" },
       (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn("❌ Error sending to content:", chrome.runtime.lastError.message);
+          return;
+        }
 
-        // handling if the message didn't reach the content
-        if(response && response.status)
-          console.log("Response from Content:", response.status);
-
-        else {
-          console.log("Response didn't react to Content.js !")
+        if (response && response.status) {
+          console.log("✅ Response from Content:", response.status);
+        } else {
+          console.log("❌ Response didn't reach Content.js!");
         }
       }
     );
-  };
+  });
+};
+
 
 function App() {
   const [dataFromBg, setDataFromBg] = useState("");
