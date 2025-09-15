@@ -40,9 +40,7 @@ function App() {
   const handleSeeHints = () => {
     // Trigger the message to content.js
     sendConfirmationToContentFromApp();
-    setClicked((prevState)=>{
-      return !prevState;
-    });
+    setClicked(true);
   };
 
   useEffect(() => {
@@ -72,18 +70,18 @@ function App() {
     <div style={{ padding: "1rem", width: "280px" }}>
       <h2>🚀 LeetCode Buddy</h2>
 
-      <button onClick={handleSeeHints}>See hints!</button>
+      <button onClick={handleSeeHints} disabled={dataFromBg !== ""}>See hints!</button>
 
       <div style={{ marginTop: "1rem" }}>
         {/* {dataFromBg ? <p>{dataFromBg}</p> : <p>Click the button to fetch hints...</p>} */}
         {
           (()=>{
             if(dataFromBg){
-              <p>{dataFromBg}</p>
+              return <p>{dataFromBg}</p>
             } else if(!dataFromBg && clicked){
-              <p>Fetching hints .....</p>
+              return <p>Fetching hints .....</p>
             } else if(!dataFromBg && !clicked){
-              <p>Click the button to fetch hints</p>
+              return <p>Click the button to fetch hints</p>
             }
           })()
         }
