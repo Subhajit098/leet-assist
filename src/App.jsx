@@ -13,24 +13,40 @@ const sendConfirmationToContentFromApp = () => {
     }
     const activeTabId = tabs[0].id;
 
-    chrome.tabs.sendMessage(
-      activeTabId,
-      { type: "CONFIRMATION_FROM_APP_TO_CONTENT" },
-      (response) => {
+    // error handling to check if the content script is injected or not into the webpage 
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: activeTabId }, // also fixed tabId reference
+        files: ["content.js"],
+      },
+      () => {
         if (chrome.runtime.lastError) {
-          console.warn("❌ Error sending to content:", chrome.runtime.lastError.message);
+          alert("Please refresh or try again later !");
+          console.error("❌ Could not inject content script:", chrome.runtime.lastError.message);
           return;
         }
 
-        if (response && response.status) {
-          console.log("✅ Response from Content:", response.status);
-        } else {
-          console.log("❌ Response didn't reach Content.js!");
-        }
+        chrome.tabs.sendMessage(
+          activeTabId,
+          { type: "CONFIRMATION_FROM_APP_TO_CONTENT" },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.warn("❌ Error sending to content:", chrome.runtime.lastError.message);
+              return;
+            }
+
+            if (response && response.status) {
+              console.log("✅ Response from Content:", response.status);
+            } else {
+              console.log("❌ Response didn't reach Content.js!");
+            }
+          }
+        );
       }
-    );
+    ); 
   });
 };
+
 
 
 function App() {
