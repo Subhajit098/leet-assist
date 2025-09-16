@@ -50,7 +50,7 @@ const sendConfirmationToContentFromApp = () => {
 
 
 function App() {
-  const [dataFromBg, setDataFromBg] = useState("");
+  const [dataFromBg, setDataFromBg] = useState([]);
   const [clicked, setClicked] = useState(false);
 
   const handleSeeHints = () => {
@@ -83,27 +83,30 @@ function App() {
   }, []); // register once
 
   return (
-    <div style={{ padding: "1rem", width: "280px" }}>
-      <h2>🚀 LeetCode Buddy</h2>
+  <div style={{ padding: "1rem", width: "280px" }}>
+    <h2>🚀 LeetCode Buddy</h2>
 
-      <button onClick={handleSeeHints} disabled={dataFromBg !== ""}>See hints!</button>
+    {/* Disable button if we already have hints */}
+    <button onClick={handleSeeHints} disabled={!!dataFromBg?.hints?.length}>
+      See hints!
+    </button>
 
-      <div style={{ marginTop: "1rem" }}>
-        {/* {dataFromBg ? <p>{dataFromBg}</p> : <p>Click the button to fetch hints...</p>} */}
-        {
-          (()=>{
-            if(dataFromBg){
-              return <p>{dataFromBg}</p>
-            } else if(!dataFromBg && clicked){
-              return <p>Fetching hints .....</p>
-            } else if(!dataFromBg && !clicked){
-              return <p>Click the button to fetch hints</p>
-            }
-          })()
-        }
-      </div>
+    <div style={{ marginTop: "1rem" }}>
+      {dataFromBg?.hints ? (
+        <div>
+          {dataFromBg.hints.map((hint, index) => (
+            <p key={index}>{hint}</p>
+          ))}
+        </div>
+      ) : clicked ? (
+        <p>Fetching hints .....</p>
+      ) : (
+        <p>Click the button to fetch hints</p>
+      )}
     </div>
+  </div>
   );
+
 }
 
 export default App;
