@@ -90,7 +90,7 @@ function App() {
     <h2>🚀 LeetCode Buddy</h2>
 
     {/* Disable button if we already have hints */}
-    <button onClick={handleSeeHints} disabled={!!dataFromBg?.hints?.length}>
+    <button onClick={handleSeeHints} disabled={clicked || !!dataFromBg?.hints?.length}>
       See hints!
     </button>
 
