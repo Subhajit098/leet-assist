@@ -1,5 +1,6 @@
 // App.jsx
 import React, { useEffect, useState } from "react";
+import IterateHints from "./components/IterateHints.jsx";
 // import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
 
 
@@ -62,7 +63,9 @@ function App() {
   useEffect(() => {
     const handleMessageFromBg = (message, sender, sendResponse) => {
       if (message && message.type === "DATA_FROM_BACKGROUND_TO_APP") {
-        setDataFromBg(message.payload);
+          setDataFromBg((prevState)=>{
+            return message.payload;
+          });
         // sendResponse to confirm receipt (optional)
           sendResponse({ received: true });
 
@@ -93,11 +96,7 @@ function App() {
 
     <div style={{ marginTop: "1rem" }}>
       {dataFromBg?.hints ? (
-        <div>
-          {dataFromBg.hints.map((hint, index) => (
-            <p key={index}>{hint}</p>
-          ))}
-        </div>
+        <IterateHints data={dataFromBg.hints}/>
       ) : clicked ? (
         <p>Fetching hints .....</p>
       ) : (
