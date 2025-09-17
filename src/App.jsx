@@ -1,6 +1,6 @@
 // App.jsx
 import React, { useEffect, useState } from "react";
-import IterateHints from "./components/IterateHints.jsx";
+import HintPagination from "./components/HintPagination.jsx";
 // import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
 
 
@@ -96,7 +96,7 @@ function App() {
 
     <div style={{ marginTop: "1rem" }}>
       {dataFromBg?.hints ? (
-        <IterateHints data={dataFromBg.hints}/>
+        <HintPagination data={dataFromBg.hints}/>
       ) : clicked ? (
         <p>Fetching hints .....</p>
       ) : (
