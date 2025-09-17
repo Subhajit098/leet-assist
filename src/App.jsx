@@ -73,12 +73,27 @@ function App() {
       }
     };
 
+    // Define the listener function
+    const handleTabUpdate = (tabId, changeInfo, tab) => {
+      if (changeInfo.url) {
+        console.log(`Tab ${tabId} navigated to: ${changeInfo.url}`);
+        // Call a function to update your extension's state
+        setDataFromBg([]);
+        setClicked(false)
+      }
+    };
+
     chrome.runtime.onMessage.addListener(handleMessageFromBg);
+
+    // Add the listener for any tab changes
+    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+
 
     return () => {
       // cleanup
       try {
         chrome.runtime.onMessage.removeListener(handleMessageFromBg);
+        chrome.tabs.onUpdated.removeListener(handleTabUpdate);
       } catch (e) {
         console.warn("Error removing listener:", e);
       }
