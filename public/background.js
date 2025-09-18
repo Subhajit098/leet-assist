@@ -1,6 +1,8 @@
 // import { fetchData } from './utils/apiCall.js';
 // import { sendDataToApp } from './utils/sendDataToApp.js';
 
+import { sidePanel } from "./Background/sidePanel.js";
+
 import OpenAI from "openai";
 
 const apiKey = import.meta.env.VITE_API_KEY2; // careful with this in extensions!
@@ -10,20 +12,6 @@ const client = new OpenAI({
 //   dangerouslyAllowBrowser: true // required when calling from browser/extension
 });
 
-// async function fetchData(url) {
-//   try {
-//     const response = await client.responses.create({
-//       model: "gpt-4.1-nano-2025-04-14",
-//       input: `Please give me all the proper hints for this leetcode question having URL : ${url} in plain text point wise (seperated by ** in one stretch i.e., in a full paragraph) in a JSON format, which covers all the techniques and methods needed to solve this question. No need to mention any extra word or line apart from the hints. I don't want answers like "here is the answers..." . Make it very clear like starting from first hint from ** then ** and continue to the next hints and then ultimately when the hints are finished , casually closing it with ** again. No extra texts of your greeting is needed just the answer `
-//     });
-
-//     // Safely return the text content
-//     return response.output[0].content[0].text;
-//   } catch (err) {
-//     console.error("Error in fetchData:", err);
-//     throw err;
-//   }
-// }
 
 
 async function fetchData(url) {
@@ -98,6 +86,23 @@ function sendDataToApp(data) {
 
 
 console.log("Background service worker loaded");
+
+
+// Listen for extension icon click : 
+chrome.action.onClicked.addListener(()=>{
+  sidePanel();
+})
+
+
+// Listen for messages from the side panel
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "PANEL_LOADED") {
+    console.log("Side panel has mounted successfully!");
+    sendResponse({ status: "acknowledged" });
+  }
+});
+
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "QUESTION_URL") {

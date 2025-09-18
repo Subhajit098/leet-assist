@@ -50,6 +50,19 @@ const sendConfirmationToContentFromApp = () => {
 };
 
 
+async function getLastUrl() {
+  try {
+    const result = await chrome.storage.local.get(["latestQuestionUrl"]);
+    const lastUrl = result.latestQuestionUrl || null;
+    console.log("Last stored URL:", lastUrl);
+    return lastUrl;
+  } catch (err) {
+    console.error("Error reading from storage:", err);
+    return null;
+  }
+}
+
+
 
 function App() {
   const [dataFromBg, setDataFromBg] = useState([]);
@@ -62,6 +75,12 @@ function App() {
   };
 
   useEffect(() => {
+
+    // Notify background that panel has mounted
+    chrome.runtime.sendMessage({ type: "PANEL_LOADED" }, (response) => {
+      console.log("Background response:", response);
+    });
+
     const handleMessageFromBg = (message, sender, sendResponse) => {
       if (message && message.type === "DATA_FROM_BACKGROUND_TO_APP") {
           setDataFromBg((prevState)=>{
@@ -74,15 +93,34 @@ function App() {
       }
     };
 
-    // Define the listener function
-    const handleTabUpdate = (tabId, changeInfo, tab) => {
-      if (changeInfo.url) {
-        console.log(`Tab ${tabId} navigated to: ${changeInfo.url}`);
-        // Call a function to update your extension's state
-        setDataFromBg([]);
-        setClicked(false)
+  // Define the tab change listener function
+  const handleTabUpdate = (tabId, changeInfo, tab) => {
+  if (changeInfo.url) {
+    const newQUrl = changeInfo.url;
+
+  chrome.storage.local.get(["latestQuestionUrl"], (result) => {
+      const lastQUrl = result.latestQuestionUrl || null;
+
+      // Skip reset if the only difference is /description/ or the new URL is same as the OLD URL
+      let condition1=((lastQUrl + "description/") === newQUrl ||
+          (newQUrl + "description/") === lastQUrl);
+      let condition2=(lastQUrl===newQUrl);
+      if (
+        lastQUrl &&
+        (condition1 || condition2)
+      ) {
+        console.log("⚠️ Ignoring /description/ ↔ base mismatch");
+        return;
       }
-    };
+
+      console.log(`Tab ${tabId} navigated to: ${newQUrl}`);
+
+      setDataFromBg([]);
+      setClicked(false);
+    });
+  }
+  };
+
 
     chrome.runtime.onMessage.addListener(handleMessageFromBg);
 
