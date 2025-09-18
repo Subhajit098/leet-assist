@@ -14,6 +14,7 @@ A **React + Vite Chrome Extension** powered by the **OpenAI API** that helps you
 ---
 
 ## 🏗 Project Structure
+```
 ├── public/
 │ ├── manifest.json # Chrome Extension manifest v3
 │ └── icons/ # Extension icons
@@ -26,3 +27,4 @@ A **React + Vite Chrome Extension** powered by the **OpenAI API** that helps you
 ├── package.json
 ├── vite.config.js
 └── README.md
+```
