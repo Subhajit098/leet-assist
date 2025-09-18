@@ -1,12 +1,30 @@
-# React + Vite
+# 🚀 LeetCode Buddy – Chrome Extension
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A **React + Vite Chrome Extension** powered by the **OpenAI API** that helps you solve **LeetCode problems** by providing step-by-step hints without spoiling the full solution.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
+- 🔍 **Context-aware hints** for LeetCode problems.
+- 🤖 **AI-powered** using the OpenAI API.
+- 🎯 **Popup UI** built with React + Vite.
+- 📌 **Sticky extension window** – only closes when you press the ❌ button.
+- 🛠 Easy to install and run locally.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🏗 Project Structure
+```
+├── public/
+│ ├── manifest.json # Chrome Extension manifest v3
+│ └── icons/ # Extension icons
+├── src/
+│ ├── background.js # Background service worker
+│ ├── content.js # Content script injected into LeetCode
+│ ├── App.jsx # Main React popup component
+│ ├── main.jsx # Vite + React entry
+│ └── styles/ # Styling
+├── package.json
+├── vite.config.js
+└── README.md
+```

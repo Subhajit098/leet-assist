@@ -1,0 +1,11 @@
+/* HintPagination.css */
+.hintParent {
+  padding: 1rem;
+  max-width: 400px;   /* wider for hints */
+  margin: 0 auto;
+}
+
+.hintChild {
+  min-height: 50px;
+  margin-bottom: 1rem;
+}

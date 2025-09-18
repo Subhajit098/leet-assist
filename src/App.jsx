@@ -1,53 +1,127 @@
+// App.jsx
 import React, { useEffect, useState } from "react";
+import HintPagination from "./components/HintPagination.jsx";
+// import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
+import "./styles/App.css"
+
+
+
+// using the tabs.query approach
+const sendConfirmationToContentFromApp = () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length === 0) {
+      console.warn("⚠️ No active tab found");
+      return;
+    }
+    const activeTabId = tabs[0].id;
+
+    // error handling to check if the content script is injected or not into the webpage 
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: activeTabId }, // also fixed tabId reference
+        files: ["content.js"],
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          alert("Please refresh or try again later !");
+          console.error("❌ Could not inject content script:", chrome.runtime.lastError.message);
+          return;
+        }
+
+        chrome.tabs.sendMessage(
+          activeTabId,
+          { type: "CONFIRMATION_FROM_APP_TO_CONTENT" },
+          (response) => {
+            if (chrome.runtime.lastError) {
+              console.warn("❌ Error sending to content:", chrome.runtime.lastError.message);
+              return;
+            }
+
+            if (response && response.status) {
+              console.log("✅ Response from Content:", response.status);
+            } else {
+              console.log("❌ Response didn't reach Content.js!");
+            }
+          }
+        );
+      }
+    ); 
+  });
+};
+
+
 
 function App() {
-  const [url, setUrl] = useState(null); // state to store the URL received 
+  const [dataFromBg, setDataFromBg] = useState([]);
+  const [clicked, setClicked] = useState(false);
 
+  const handleSeeHints = () => {
+    // Trigger the message to content.js
+    sendConfirmationToContentFromApp();
+    setClicked(true);
+  };
 
   useEffect(() => {
-    // 1. Read the latest URL when popup loads
-    chrome.storage.local.get("latestQuestionUrl", (result) => {
-      if (result.latestQuestionUrl) {
-        console.log("📂 Loaded from storage:", result.latestQuestionUrl);
-        setUrl(result.latestQuestionUrl);
+    const handleMessageFromBg = (message, sender, sendResponse) => {
+      if (message && message.type === "DATA_FROM_BACKGROUND_TO_APP") {
+          setDataFromBg((prevState)=>{
+            return message.payload;
+          });
+        // sendResponse to confirm receipt (optional)
+          sendResponse({ received: true });
+
+        // no need to return true here since we responded synchronously
       }
-    });
+    };
 
-    // 2. Listen for storage changes (if new URL is stored)
-    function handleStorageChange(changes, areaName) {
-      if (areaName === "local" && changes.latestQuestionUrl) {
-        console.log("🔄 Storage updated:", changes.latestQuestionUrl.newValue);
-        setUrl(changes.latestQuestionUrl.newValue);
+    // Define the listener function
+    const handleTabUpdate = (tabId, changeInfo, tab) => {
+      if (changeInfo.url) {
+        console.log(`Tab ${tabId} navigated to: ${changeInfo.url}`);
+        // Call a function to update your extension's state
+        setDataFromBg([]);
+        setClicked(false)
       }
-    }
+    };
 
-    chrome.storage.onChanged.addListener(handleStorageChange);
-  }, [url]);
+    chrome.runtime.onMessage.addListener(handleMessageFromBg);
 
-  console.log("URL : ",url)
+    // Add the listener for any tab changes
+    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+
+
+    return () => {
+      // cleanup
+      try {
+        chrome.runtime.onMessage.removeListener(handleMessageFromBg);
+        chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+      } catch (e) {
+        console.warn("Error removing listener:", e);
+      }
+    };
+  }, []); // register once
 
   return (
-    <div style={{ padding: "1rem", width: "280px" }}>
-      <h2>🚀 LeetCode Buddy</h2>
+  <div className="parentBody">
+    <h2>🚀 LeetCode Buddy</h2>
 
-      {/* Button to trigger injection of content.js and fetch URL */}
-      <button >{url}</button>
+    {/* Disable button if we already have hints */}
+    <button onClick={handleSeeHints} disabled={clicked || !!dataFromBg?.hints?.length}>
+      See hints!
+    </button>
 
-      {/* Make an API call here once you have the URL (inside useEffect) */}
-      {url && (
-        <div style={{ marginTop: "1rem" }}>
-          <p>
-            🔗{" "}
-            {/* Always add rel="noopener noreferrer" when using target="_blank" for security */}
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              {url}
-            </a>
-          </p>
-        </div>
+    <div className="childBody">
+      {dataFromBg?.hints ? (
+        <HintPagination data={dataFromBg.hints}/>
+      ) : clicked ? (
+        <p>Fetching hints .....</p>
+      ) : (
+        <p>Click the button to fetch hints</p>
       )}
-
     </div>
+  </div>
   );
+
 }
 
 export default App;
