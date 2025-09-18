@@ -14,3 +14,15 @@ A **React + Vite Chrome Extension** powered by the **OpenAI API** that helps you
 ---
 
 ## 🏗 Project Structure
+├── public/
+│ ├── manifest.json # Chrome Extension manifest v3
+│ └── icons/ # Extension icons
+├── src/
+│ ├── background.js # Background service worker
+│ ├── content.js # Content script injected into LeetCode
+│ ├── App.jsx # Main React popup component
+│ ├── main.jsx # Vite + React entry
+│ └── styles/ # Styling
+├── package.json
+├── vite.config.js
+└── README.md
