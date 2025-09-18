@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import HintPagination from "./components/HintPagination.jsx";
 // import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
+import "./styles/App.css"
 
 
 
@@ -101,7 +102,7 @@ function App() {
   }, []); // register once
 
   return (
-  <div style={{ padding: "1rem", width: "280px" }}>
+  <div className="parentBody">
     <h2>🚀 LeetCode Buddy</h2>
 
     {/* Disable button if we already have hints */}
@@ -109,7 +110,7 @@ function App() {
       See hints!
     </button>
 
-    <div style={{ marginTop: "1rem" }}>
+    <div className="childBody">
       {dataFromBg?.hints ? (
         <HintPagination data={dataFromBg.hints}/>
       ) : clicked ? (

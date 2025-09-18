@@ -1,0 +1,11 @@
+.parentBody {
+  padding: 1rem;
+  width: 400px;   /* instead of max-width:200px */
+  margin: 0 auto;
+}
+
+.childBody {
+  min-height: 150px;
+  max-width: 380px;
+  margin-bottom: 1rem;
+}

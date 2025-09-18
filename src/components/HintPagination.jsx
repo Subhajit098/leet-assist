@@ -15,10 +15,10 @@ export default function HintPagination(props) {
   const currentHint = props.data.slice(page - 1, page - 1 + hintsPerPage);
 
   return (
-    <div className="parentBody">
+    <div className="hintParent">
       <h2>💡 Hint {page}</h2>
 
-      <div className="childBody">
+      <div className="hintChild">
         {currentHint.map((hint, index) => (
           <p key={index}>{hint}</p>
         ))}
