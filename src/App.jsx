@@ -93,12 +93,12 @@ function App() {
       }
     };
 
-  // Define the tab change listener function
+  // Define the tab change listener function so that it can handle the leetcode link discrepancy where the description is missing sometimes
   const handleTabUpdate = (tabId, changeInfo, tab) => {
   if (changeInfo.url) {
     const newQUrl = changeInfo.url;
 
-  chrome.storage.local.get(["latestQuestionUrl"], (result) => {
+  chrome.storage.local.get(["latestQuestionUrl"], async(result) => {
       const lastQUrl = result.latestQuestionUrl || null;
 
       // Skip reset if the only difference is /description/ or the new URL is same as the OLD URL
@@ -113,16 +113,21 @@ function App() {
         return;
       }
 
-      console.log(`Trigger from App.js . Tab ${tabId} navigated to: ${newQUrl}`);
-      setDataFromBg([]);
-      setClicked(false);
+      // this piece of code is handled by the code in background.js for disabling the side panel
+      // console.log(`Trigger from App.js . Tab ${tabId} navigated to: ${newQUrl}`);
+      // await chrome.storage.local.remove("latestQuestionUrl");
+      // setDataFromBg([]);
+      // setClicked(false);
+      // window.close();
+      // return ;
     });
   }
   };
 
   // close side panel function 
-  function closeSidePanel(msg){
+  async function closeSidePanel(msg){
       if (msg?.type === "close-sidepanel") {
+        await chrome.storage.local.remove("latestQuestionUrl");
         window.close();
       }
       return ;

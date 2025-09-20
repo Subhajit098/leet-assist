@@ -120,14 +120,22 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   let url="";
   if(tab.url && tab.url.startsWith("https"))
     url = new URL(tab.url);
-  if (!url || !(url.hostname === allowedHost && url.pathname.startsWith("/problems"))) {
-    await chrome.sidePanel.setOptions({ tabId, enabled: false });
 
-    // Sending message to the App.jsx to close the side panel
-    chrome.runtime.sendMessage({ type: "close-sidepanel", tabId }).catch(() => {
-        // Safe to ignore if no side panel is open
-    });
-  } 
+
+  // check if the user is moving to a different leetcode problem URL than the present one
+  const result = await chrome.storage.local.get(["latestQuestionUrl"]);
+  const lastUrl = result.latestQuestionUrl || null;
+  console.log("Last stored URL:", lastUrl);
+  if((lastUrl && url!==lastUrl) || (!url) || (!lastUrl && !(url.hostname === allowedHost && url.pathname.startsWith("/problems")))){
+      await chrome.sidePanel.setOptions({ tabId, enabled: false });
+
+      // Sending message to the App.jsx to close the side panel
+      chrome.runtime.sendMessage({ type: "close-sidepanel", tabId }).catch(() => {
+          // Safe to ignore if no side panel is open
+      });
+  }
+
+  
 });
 
 
