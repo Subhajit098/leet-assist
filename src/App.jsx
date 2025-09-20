@@ -113,13 +113,20 @@ function App() {
         return;
       }
 
-      console.log(`Tab ${tabId} navigated to: ${newQUrl}`);
-
+      console.log(`Trigger from App.js . Tab ${tabId} navigated to: ${newQUrl}`);
       setDataFromBg([]);
       setClicked(false);
     });
   }
   };
+
+  // close side panel function 
+  function closeSidePanel(msg){
+      if (msg?.type === "close-sidepanel") {
+        window.close();
+      }
+      return ;
+  }
 
 
     chrome.runtime.onMessage.addListener(handleMessageFromBg);
@@ -128,15 +135,23 @@ function App() {
     chrome.tabs.onUpdated.addListener(handleTabUpdate);
 
 
+    // 
+
+    // HANLDE THE closing side panel 
+    chrome.runtime.onMessage.addListener(closeSidePanel);
+
+
     return () => {
       // cleanup
       try {
         chrome.runtime.onMessage.removeListener(handleMessageFromBg);
         chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+        chrome.runtime.onMessage.removeListener(closeSidePanel);
       } catch (e) {
         console.warn("Error removing listener:", e);
       }
     };
+
   }, []); // register once
 
   return (

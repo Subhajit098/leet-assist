@@ -117,9 +117,16 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   const tab = await chrome.tabs.get(tabId);
   console.log("User switched to tab:", tab.url);
 
-  const url = new URL(tab.url);
-  if (!(url.hostname === allowedHost && url.pathname.startsWith("/problems"))) {
+  let url="";
+  if(tab.url && tab.url.startsWith("https"))
+    url = new URL(tab.url);
+  if (!url || !(url.hostname === allowedHost && url.pathname.startsWith("/problems"))) {
     await chrome.sidePanel.setOptions({ tabId, enabled: false });
+
+    // Sending message to the App.jsx to close the side panel
+    chrome.runtime.sendMessage({ type: "close-sidepanel", tabId }).catch(() => {
+        // Safe to ignore if no side panel is open
+    });
   } 
 });
 
