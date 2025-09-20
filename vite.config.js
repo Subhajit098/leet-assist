@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
+import { sidePanel } from './public/Background/sidePanel'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,7 +10,7 @@ export default defineConfig({
   build: {  
     rollupOptions: {
       input: {
-        main: 'index.html',
+        sidePanel : 'index.html',
         background: './public/background.js'
       },
       output: {

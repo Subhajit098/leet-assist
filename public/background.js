@@ -88,19 +88,57 @@ function sendDataToApp(data) {
 console.log("Background service worker loaded");
 
 
+const allowedHost = "leetcode.com";
+const allowedPathPrefix = "/problems/";
+
 // Listen for extension icon click : 
-chrome.action.onClicked.addListener(()=>{
-  sidePanel();
-})
+// Handle extension icon click
+chrome.action.onClicked.addListener(async (tab) => {
 
+  if (!chrome.sidePanel) {
+    console.error("❌ chrome.sidePanel API is not available. Update Chrome to v114+.");
+    return;
+  }
 
-// Listen for messages from the side panel
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "PANEL_LOADED") {
-    console.log("Side panel has mounted successfully!");
-    sendResponse({ status: "acknowledged" });
+  if (!tab.url) return;
+
+  const url = new URL(tab.url);
+
+  // Only allow on LeetCode problems
+  if (url.hostname === allowedHost && url.pathname.startsWith(allowedPathPrefix))  {
+    await chrome.sidePanel.open({ tabId: tab.id });
+  } else {
+    // Optional: show feedback if clicked on wrong site
+    console.log("Side panel not available on this site:", url.hostname);
   }
 });
+
+
+// Always register the message listener globally
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "PANEL_LOADED") {
+    console.log("Side panel has mounted successfully!");
+    sendResponse({ status: "acknowledged" });
+    return true; // keep the message channel open until sendResponse runs
+  }
+});
+
+
+// Listen for tab changes so the side panel can be mounted automatically
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.url) { // Fires when URL actually changes
+    const url = new URL(changeInfo.url);
+
+    if (url.hostname !== allowedHost) {
+      await chrome.sidePanel.setOptions({
+        tabId,
+        enabled: false,
+      });
+    }
+  }
+});
+
+
 
 
 

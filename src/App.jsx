@@ -78,7 +78,7 @@ function App() {
 
     // Notify background that panel has mounted
     chrome.runtime.sendMessage({ type: "PANEL_LOADED" }, (response) => {
-      console.log("Background response:", response);
+      console.log("Background response:", response.status);
     });
 
     const handleMessageFromBg = (message, sender, sendResponse) => {
