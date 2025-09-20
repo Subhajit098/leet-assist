@@ -1,8 +1,6 @@
 // import { fetchData } from './utils/apiCall.js';
 // import { sendDataToApp } from './utils/sendDataToApp.js';
 
-import { sidePanel } from "./Background/sidePanel.js";
-
 import OpenAI from "openai";
 
 const apiKey = import.meta.env.VITE_API_KEY2; // careful with this in extensions!
@@ -114,6 +112,18 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 
+// Listen for tab changes so the side panel can be unmounted automatically
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  const tab = await chrome.tabs.get(tabId);
+  console.log("User switched to tab:", tab.url);
+
+  const url = new URL(tab.url);
+  if (!(url.hostname === allowedHost && url.pathname.startsWith("/problems"))) {
+    await chrome.sidePanel.setOptions({ tabId, enabled: false });
+  } 
+});
+
+
 // Always register the message listener globally
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === "PANEL_LOADED") {
@@ -123,20 +133,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-
-// Listen for tab changes so the side panel can be mounted automatically
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (changeInfo.url) { // Fires when URL actually changes
-    const url = new URL(changeInfo.url);
-
-    if (url.hostname !== allowedHost) {
-      await chrome.sidePanel.setOptions({
-        tabId,
-        enabled: false,
-      });
-    }
-  }
-});
 
 
 
