@@ -1,0 +1,13 @@
+# files
+README.md
+*.log
+.env
+
+
+
+# folders
+node_modules/
+.git/
+.vscode/
+dist/
+build/

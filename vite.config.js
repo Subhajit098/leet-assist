@@ -9,7 +9,7 @@ export default defineConfig({
   build: {  
     rollupOptions: {
       input: {
-        main: 'index.html',
+        sidePanel : 'index.html',
         background: './public/background.js'
       },
       output: {

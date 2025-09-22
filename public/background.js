@@ -10,20 +10,6 @@ const client = new OpenAI({
 //   dangerouslyAllowBrowser: true // required when calling from browser/extension
 });
 
-// async function fetchData(url) {
-//   try {
-//     const response = await client.responses.create({
-//       model: "gpt-4.1-nano-2025-04-14",
-//       input: `Please give me all the proper hints for this leetcode question having URL : ${url} in plain text point wise (seperated by ** in one stretch i.e., in a full paragraph) in a JSON format, which covers all the techniques and methods needed to solve this question. No need to mention any extra word or line apart from the hints. I don't want answers like "here is the answers..." . Make it very clear like starting from first hint from ** then ** and continue to the next hints and then ultimately when the hints are finished , casually closing it with ** again. No extra texts of your greeting is needed just the answer `
-//     });
-
-//     // Safely return the text content
-//     return response.output[0].content[0].text;
-//   } catch (err) {
-//     console.error("Error in fetchData:", err);
-//     throw err;
-//   }
-// }
 
 
 async function fetchData(url) {
@@ -98,6 +84,74 @@ function sendDataToApp(data) {
 
 
 console.log("Background service worker loaded");
+
+
+const allowedHost = "leetcode.com";
+const allowedPathPrefix = "/problems/";
+
+// Listen for extension icon click : 
+// Handle extension icon click
+chrome.action.onClicked.addListener(async (tab) => {
+
+  if (!chrome.sidePanel) {
+    console.error("❌ chrome.sidePanel API is not available. Update Chrome to v114+.");
+    return;
+  }
+
+  if (!tab.url) return;
+
+  const url = new URL(tab.url);
+
+  // Only allow on LeetCode problems
+  if (url.hostname === allowedHost && url.pathname.startsWith(allowedPathPrefix))  {
+    await chrome.sidePanel.open({ tabId: tab.id });
+  } else {
+    // Optional: show feedback if clicked on wrong site
+    console.log("Side panel not available on this site:", url.hostname);
+  }
+});
+
+
+// Listen for tab changes so the side panel can be unmounted automatically
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  const tab = await chrome.tabs.get(tabId);
+  console.log("User switched to tab:", tab.url);
+
+  let url="";
+  if(tab.url && tab.url.startsWith("https"))
+    url = new URL(tab.url);
+
+
+  // check if the user is moving to a different leetcode problem URL than the present one
+  const result = await chrome.storage.local.get(["latestQuestionUrl"]);
+  const lastUrl = result.latestQuestionUrl || null;
+  console.log("Last stored URL:", lastUrl);
+  if((lastUrl && url!==lastUrl) || (!url) || (!lastUrl && !(url.hostname === allowedHost && url.pathname.startsWith("/problems")))){
+      await chrome.sidePanel.setOptions({ tabId, enabled: false });
+
+      // Sending message to the App.jsx to close the side panel
+      chrome.runtime.sendMessage({ type: "close-sidepanel", tabId }).catch(() => {
+          // Safe to ignore if no side panel is open
+      });
+  }
+
+  
+});
+
+
+// Always register the message listener globally
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "PANEL_LOADED") {
+    console.log("Side panel has mounted successfully!");
+    sendResponse({ status: "acknowledged" });
+    return true; // keep the message channel open until sendResponse runs
+  }
+});
+
+
+
+
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "QUESTION_URL") {

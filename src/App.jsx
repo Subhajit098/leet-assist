@@ -50,6 +50,19 @@ const sendConfirmationToContentFromApp = () => {
 };
 
 
+async function getLastUrl() {
+  try {
+    const result = await chrome.storage.local.get(["latestQuestionUrl"]);
+    const lastUrl = result.latestQuestionUrl || null;
+    console.log("Last stored URL:", lastUrl);
+    return lastUrl;
+  } catch (err) {
+    console.error("Error reading from storage:", err);
+    return null;
+  }
+}
+
+
 
 function App() {
   const [dataFromBg, setDataFromBg] = useState([]);
@@ -62,6 +75,12 @@ function App() {
   };
 
   useEffect(() => {
+
+    // Notify background that panel has mounted
+    chrome.runtime.sendMessage({ type: "PANEL_LOADED" }, (response) => {
+      console.log("Background response:", response.status);
+    });
+
     const handleMessageFromBg = (message, sender, sendResponse) => {
       if (message && message.type === "DATA_FROM_BACKGROUND_TO_APP") {
           setDataFromBg((prevState)=>{
@@ -74,15 +93,46 @@ function App() {
       }
     };
 
-    // Define the listener function
-    const handleTabUpdate = (tabId, changeInfo, tab) => {
-      if (changeInfo.url) {
-        console.log(`Tab ${tabId} navigated to: ${changeInfo.url}`);
-        // Call a function to update your extension's state
-        setDataFromBg([]);
-        setClicked(false)
+  // Define the tab change listener function so that it can handle the leetcode link discrepancy where the description is missing sometimes
+  const handleTabUpdate = (tabId, changeInfo, tab) => {
+  if (changeInfo.url) {
+    const newQUrl = changeInfo.url;
+
+  chrome.storage.local.get(["latestQuestionUrl"], async(result) => {
+      const lastQUrl = result.latestQuestionUrl || null;
+
+      // Skip reset if the only difference is /description/ or the new URL is same as the OLD URL
+      let condition1=((lastQUrl + "description/") === newQUrl ||
+          (newQUrl + "description/") === lastQUrl);
+      let condition2=(lastQUrl===newQUrl);
+      if (
+        lastQUrl &&
+        (condition1 || condition2)
+      ) {
+        console.log("⚠️ Ignoring /description/ ↔ base mismatch");
+        return;
       }
-    };
+
+      // this piece of code is handled by the code in background.js for disabling the side panel
+      // console.log(`Trigger from App.js . Tab ${tabId} navigated to: ${newQUrl}`);
+      // await chrome.storage.local.remove("latestQuestionUrl");
+      // setDataFromBg([]);
+      // setClicked(false);
+      // window.close();
+      // return ;
+    });
+  }
+  };
+
+  // close side panel function 
+  async function closeSidePanel(msg){
+      if (msg?.type === "close-sidepanel") {
+        await chrome.storage.local.remove("latestQuestionUrl");
+        window.close();
+      }
+      return ;
+  }
+
 
     chrome.runtime.onMessage.addListener(handleMessageFromBg);
 
@@ -90,15 +140,23 @@ function App() {
     chrome.tabs.onUpdated.addListener(handleTabUpdate);
 
 
+    // 
+
+    // HANLDE THE closing side panel 
+    chrome.runtime.onMessage.addListener(closeSidePanel);
+
+
     return () => {
       // cleanup
       try {
         chrome.runtime.onMessage.removeListener(handleMessageFromBg);
         chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+        chrome.runtime.onMessage.removeListener(closeSidePanel);
       } catch (e) {
         console.warn("Error removing listener:", e);
       }
     };
+
   }, []); // register once
 
   return (
