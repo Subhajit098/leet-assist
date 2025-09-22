@@ -1,7 +1,6 @@
 // App.jsx
 import React, { useEffect, useState } from "react";
 import HintPagination from "./components/HintPagination.jsx";
-// import { sendConfirmationToContentFromApp } from "../public/utils/sendConfirmationToContentFromApp.js";
 import "./styles/App.css"
 
 
