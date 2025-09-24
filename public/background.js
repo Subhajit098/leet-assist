@@ -91,6 +91,7 @@ const allowedPathPrefix = "/problems/";
 
 // Listen for extension icon click : 
 // Handle extension icon click
+
 chrome.action.onClicked.addListener(async (tab) => {
 
   if (!chrome.sidePanel) {
@@ -105,38 +106,21 @@ chrome.action.onClicked.addListener(async (tab) => {
   // Only allow on LeetCode problems
   if (url.hostname === allowedHost && url.pathname.startsWith(allowedPathPrefix))  {
     await chrome.sidePanel.open({ tabId: tab.id });
+
   } else {
     // Optional: show feedback if clicked on wrong site
     console.log("Side panel not available on this site:", url.hostname);
   }
+
+  return true;
 });
 
 
-// Listen for tab changes so the side panel can be unmounted automatically
-chrome.tabs.onActivated.addListener(async ({ tabId }) => {
-  const tab = await chrome.tabs.get(tabId);
-  console.log("User switched to tab:", tab.url);
-
-  let url="";
-  if(tab.url && tab.url.startsWith("https"))
-    url = new URL(tab.url);
 
 
-  // check if the user is moving to a different leetcode problem URL than the present one
-  const result = await chrome.storage.local.get(["latestQuestionUrl"]);
-  const lastUrl = result.latestQuestionUrl || null;
-  console.log("Last stored URL:", lastUrl);
-  if((lastUrl && url!==lastUrl) || (!url) || (!lastUrl && !(url.hostname === allowedHost && url.pathname.startsWith("/problems")))){
-      await chrome.sidePanel.setOptions({ tabId, enabled: false });
 
-      // Sending message to the App.jsx to close the side panel
-      chrome.runtime.sendMessage({ type: "close-sidepanel", tabId }).catch(() => {
-          // Safe to ignore if no side panel is open
-      });
-  }
 
-  
-});
+
 
 
 // Always register the message listener globally

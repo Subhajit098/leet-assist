@@ -2,64 +2,9 @@
 import React, { useEffect, useState } from "react";
 import HintPagination from "./components/HintPagination.jsx";
 import "./styles/App.css"
+import { sendConfirmationToContentFromApp } from "./appHelpers/sendConfirmationToContentFromApp.js";
+import { getLastUrl } from "./appHelpers/getLastUrl.js";
 
-
-
-// using the tabs.query approach
-const sendConfirmationToContentFromApp = () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs.length === 0) {
-      console.warn("⚠️ No active tab found");
-      return;
-    }
-    const activeTabId = tabs[0].id;
-
-    // error handling to check if the content script is injected or not into the webpage 
-    chrome.scripting.executeScript(
-      {
-        target: { tabId: activeTabId }, // also fixed tabId reference
-        files: ["content.js"],
-      },
-      () => {
-        if (chrome.runtime.lastError) {
-          alert("Please refresh or try again later !");
-          console.error("❌ Could not inject content script:", chrome.runtime.lastError.message);
-          return;
-        }
-
-        chrome.tabs.sendMessage(
-          activeTabId,
-          { type: "CONFIRMATION_FROM_APP_TO_CONTENT" },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              console.warn("❌ Error sending to content:", chrome.runtime.lastError.message);
-              return;
-            }
-
-            if (response && response.status) {
-              console.log("✅ Response from Content:", response.status);
-            } else {
-              console.log("❌ Response didn't reach Content.js!");
-            }
-          }
-        );
-      }
-    ); 
-  });
-};
-
-
-async function getLastUrl() {
-  try {
-    const result = await chrome.storage.local.get(["latestQuestionUrl"]);
-    const lastUrl = result.latestQuestionUrl || null;
-    console.log("Last stored URL:", lastUrl);
-    return lastUrl;
-  } catch (err) {
-    console.error("Error reading from storage:", err);
-    return null;
-  }
-}
 
 
 
@@ -69,94 +14,82 @@ function App() {
 
   const handleSeeHints = () => {
     // Trigger the message to content.js
+
     sendConfirmationToContentFromApp();
     setClicked(true);
   };
 
-  useEffect(() => {
-
-    // Notify background that panel has mounted
-    chrome.runtime.sendMessage({ type: "PANEL_LOADED" }, (response) => {
-      console.log("Background response:", response.status);
-    });
-
-    const handleMessageFromBg = (message, sender, sendResponse) => {
-      if (message && message.type === "DATA_FROM_BACKGROUND_TO_APP") {
-          setDataFromBg((prevState)=>{
-            return message.payload;
-          });
-        // sendResponse to confirm receipt (optional)
-          sendResponse({ received: true });
-
-        // no need to return true here since we responded synchronously
-      }
-    };
-
-  // Define the tab change listener function so that it can handle the leetcode link discrepancy where the description is missing sometimes
-  const handleTabUpdate = (tabId, changeInfo, tab) => {
-  if (changeInfo.url) {
-    const newQUrl = changeInfo.url;
-
-  chrome.storage.local.get(["latestQuestionUrl"], async(result) => {
-      const lastQUrl = result.latestQuestionUrl || null;
-
-      // Skip reset if the only difference is /description/ or the new URL is same as the OLD URL
-      let condition1=((lastQUrl + "description/") === newQUrl ||
-          (newQUrl + "description/") === lastQUrl);
-      let condition2=(lastQUrl===newQUrl);
-      if (
-        lastQUrl &&
-        (condition1 || condition2)
-      ) {
-        console.log("⚠️ Ignoring /description/ ↔ base mismatch");
-        return;
-      }
-
-      // this piece of code is handled by the code in background.js for disabling the side panel
-      // console.log(`Trigger from App.js . Tab ${tabId} navigated to: ${newQUrl}`);
-      // await chrome.storage.local.remove("latestQuestionUrl");
-      // setDataFromBg([]);
-      // setClicked(false);
-      // window.close();
-      // return ;
-    });
+  const resetValue=()=>{
+    setDataFromBg([]);
+    setClicked(false);
   }
+
+useEffect(() => {
+  // Helper to get tab info as a promise
+  const getTab = (tabId) =>
+    new Promise((resolve, reject) => {
+      chrome.tabs.get(tabId, (tab) => {
+        if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+        else resolve(tab);
+      });
+    });
+
+  // Called whenever active tab changes
+  const handleTabActivated = async ({ tabId }) => {
+    try {
+      const tab = await getTab(tabId);
+      console.log("Tab switched to:", tab.url);
+      resetValue();
+    } catch (err) {
+      console.error("Error getting tab info:", err.message);
+    }
   };
 
-  // close side panel function 
-  async function closeSidePanel(msg){
-      if (msg?.type === "close-sidepanel") {
-        await chrome.storage.local.remove("latestQuestionUrl");
-        window.close();
-      }
-      return ;
-  }
+  // Called whenever tab URL updates
+  const handleTabUpdated = (tabId, changeInfo, tab) => {
+    if (changeInfo.url) {
+      const newQUrl = changeInfo.url;
+      chrome.storage.local.get(["latestQuestionUrl"], (result) => {
+        const lastQUrl = result.latestQuestionUrl || null;
 
+        // Skip if only difference is /description/
+        if (
+          lastQUrl &&
+          ((lastQUrl + "description/") === newQUrl ||
+            (newQUrl + "description/") === lastQUrl ||
+            lastQUrl === newQUrl)
+        ) {
+          console.log("⚠️ Ignoring /description/ ↔ base mismatch");
+          return;
+        }
 
-    chrome.runtime.onMessage.addListener(handleMessageFromBg);
+        console.log(`Tab ${tabId} navigated to: ${newQUrl}`);
+        resetValue();
+      });
+    }
+  };
 
-    // Add the listener for any tab changes
-    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+  // Message listener from background
+  const handleMessageFromBg = (message, sender, sendResponse) => {
+    if (message?.type === "DATA_FROM_BACKGROUND_TO_APP") {
+      setDataFromBg(message.payload);
+      sendResponse({ received: true });
+    }
+    return true; // for async if needed
+  };
 
+  // Attach listeners
+  chrome.runtime.onMessage.addListener(handleMessageFromBg);
+  chrome.tabs.onActivated.addListener(handleTabActivated);
+  chrome.tabs.onUpdated.addListener(handleTabUpdated);
 
-    // 
-
-    // HANLDE THE closing side panel 
-    chrome.runtime.onMessage.addListener(closeSidePanel);
-
-
-    return () => {
-      // cleanup
-      try {
-        chrome.runtime.onMessage.removeListener(handleMessageFromBg);
-        chrome.tabs.onUpdated.removeListener(handleTabUpdate);
-        chrome.runtime.onMessage.removeListener(closeSidePanel);
-      } catch (e) {
-        console.warn("Error removing listener:", e);
-      }
-    };
-
-  }, []); // register once
+  // Cleanup on unmount
+  return () => {
+    chrome.runtime.onMessage.removeListener(handleMessageFromBg);
+    chrome.tabs.onActivated.removeListener(handleTabActivated);
+    chrome.tabs.onUpdated.removeListener(handleTabUpdated);
+  };
+}, []);
 
   return (
   <div className="parentBody">
