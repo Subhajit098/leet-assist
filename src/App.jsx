@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import HintPagination from "./components/HintPagination.jsx";
 import "./styles/App.css"
 import { sendConfirmationToContentFromApp } from "./appHelpers/sendConfirmationToContentFromApp.js";
-import { getLastUrl } from "./appHelpers/getLastUrl.js";
 
 
 
