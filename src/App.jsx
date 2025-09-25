@@ -4,7 +4,13 @@ import HintPagination from "./components/HintPagination.jsx";
 import "./styles/App.css"
 import { sendConfirmationToContentFromApp } from "./appHelpers/sendConfirmationToContentFromApp.js";
 import { Container, AppBar, Toolbar, Typography, Box } from "@mui/material";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import ErrorAlert from "./components/ErrorAlert.jsx";
+ErrorAlert;
+import FetchingHints from "./components/static/FetchingHints.jsx";
+import ClickTheButtonToFetchHints from "./components/static/ClickTheButtonToFetchHints.jsx";
+import Footer from "./components/static/Footer.jsx";
+import AppHeading from "./components/static/AppHeading.jsx";
+
 
 function App() {
 
@@ -133,17 +139,7 @@ function App() {
 
         <div className="parentBody">
           {/* <h2>🚀 Leet Assist</h2> */}
-          <AppBar position="static"
-            sx={{
-              borderRadius: "8px 8px 0 0",
-              width: "100%",
-              boxShadow: "none"
-            }}>
-            <Toolbar variant="dense" sx={{ minHeight: 40, px: 1 }}>
-              <RocketLaunchIcon fontSize="small" sx={{ mr: 1 }} />
-              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Leet Assist</Typography>
-            </Toolbar>
-          </AppBar>
+            <AppHeading/>
 
 
           {/* Disable button if we already have hints */}
@@ -153,22 +149,18 @@ function App() {
 
           <div className="childBody">
             {state.error ? (
-              <p>{state.error}</p>
+              <ErrorAlert data={state.error}/>
             ) :
               state.dataFromBg?.hints ? (
                 <HintPagination data={state.dataFromBg.hints} />
               ) : state.clicked ? (
-                <p>Fetching hints .....</p>
+                <FetchingHints/>
               ) : (
-                <p>Click the button to fetch hints</p>
+                <ClickTheButtonToFetchHints/>
               )}
           </div>
 
-          <Box sx={{ mt: "auto", textAlign: "center", p: 1 }}>
-            <Typography variant="caption" color="text.secondary">
-              Made with ❤️ for LeetCode practice
-            </Typography>
-          </Box>
+          <Footer/>
 
         </div>
 

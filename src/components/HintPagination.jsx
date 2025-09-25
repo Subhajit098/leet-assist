@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import "../styles/HintPagination.css"
+import { Typography, Box } from "@mui/material";
 
 export default function HintPagination(props) {
   const [page, setPage] = useState(1); // current page (1-indexed)
@@ -16,13 +17,36 @@ export default function HintPagination(props) {
 
   return (
     <div className="hintParent">
-      <h2>💡 Hint {page}</h2>
+      <Typography variant="subtitle1" fontWeight="bold" p={2}>
+        💡 Hints : 
+      </Typography>
 
-      <div className="hintChild">
-        {currentHint.map((hint, index) => (
-          <p key={index}>{hint}</p>
-        ))}
-      </div>
+    <div className="hintChild">
+      {currentHint.map((hint, index) => (
+        <Box
+          key={index}
+          sx={{
+            p: 2,
+            mb: 2,
+            borderRadius: 2,
+            bgcolor: "background.paper",
+            boxShadow: 1,
+          }}
+        >
+          <Typography
+            variant="subtitle1"
+            fontWeight="bold"
+            sx={{ display: "flex", alignItems: "center", mb: 1 }}
+          >
+            💡 Hint - {index + 1}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" lineHeight={1.6}>
+            {hint}
+          </Typography>
+        </Box>
+      ))}
+    </div>
+
 
       <Stack spacing={2} alignItems="center">
         <Pagination
