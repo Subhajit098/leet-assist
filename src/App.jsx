@@ -10,6 +10,7 @@ import FetchingHints from "./components/static/FetchingHints.jsx";
 import ClickTheButtonToFetchHints from "./components/static/ClickTheButtonToFetchHints.jsx";
 import Footer from "./components/static/Footer.jsx";
 import AppHeading from "./components/static/AppHeading.jsx";
+import DarkModeToggle from "./components/static/DarkModeToggle.jsx";
 
 
 function App() {
@@ -138,9 +139,11 @@ function App() {
         {/* App content here  */}
 
         <div className="parentBody">
+          {/* Add the dark mode button before the heading so that it is placed at the right corner */}
+            <DarkModeToggle/>
+
           {/* <h2>🚀 Leet Assist</h2> */}
             <AppHeading/>
-
 
           {/* Disable button if we already have hints */}
           <button onClick={handleSeeHints} disabled={state.clicked || !!state.dataFromBg?.hints?.length}>

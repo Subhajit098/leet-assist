@@ -13,7 +13,9 @@ export default function AppHeading() {
         <Toolbar variant="dense" sx={{ minHeight: 40, px: 1 }}>
             <RocketLaunchIcon fontSize="small" sx={{ mr: 1 }} />
             <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Leet Assist</Typography>
+            
         </Toolbar>
+
     </AppBar>
   )
 }
