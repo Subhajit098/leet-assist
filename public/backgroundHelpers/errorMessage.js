@@ -1,15 +1,15 @@
 // Map for HTTP status codes
 const errorCodesToMessage = new Map([
   [429, "Timeout: Too many requests. Try again later."],
-  [500, "InternalServerError: OpenAI had an internal issue."],
-  [503, "ServiceUnavailableError: OpenAI service is down or overloaded."]
+  [500, "InternalServerError: Server had an internal issue."],
+  [503, "ServiceUnavailableError: service is down or overloaded."]
 ]);
 
 // Map for special error codes/names
 const specialErrors = new Map([
   ["ETIMEDOUT", "Timeout: Request took too long."],
-  ["ECONNREFUSED", "APIConnectionError: Could not reach OpenAI API."],
-  ["ENOTFOUND", "APIConnectionError: DNS lookup failed, could not reach OpenAI API."],
+  ["ECONNREFUSED", "APIConnectionError: Could not reach API."],
+  ["ENOTFOUND", "APIConnectionError: DNS lookup failed, could not reach API."],
   ["AbortError", "Timeout: Request aborted by client."]
 ]);
 

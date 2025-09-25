@@ -1,5 +1,3 @@
-// import { fetchData } from './utils/apiCall.js';
-// import { sendDataToApp } from './utils/sendDataToApp.js';
 import { fetchData } from "./backgroundHelpers/fetchData";
 import { sendDataToApp } from "./backgroundHelpers/sendDataToApp";
 import { getErrorMessage } from "./backgroundHelpers/errorMessage";
