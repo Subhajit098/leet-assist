@@ -1,3 +1,5 @@
+// Send data(whether hints or and error message) received from API to App.jsx
+
 export function sendDataToApp(data) {
   chrome.runtime.sendMessage(
     {

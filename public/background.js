@@ -1,10 +1,8 @@
-// import { fetchData } from './utils/apiCall.js';
-// import { sendDataToApp } from './utils/sendDataToApp.js';
 import { fetchData } from "./backgroundHelpers/fetchData";
 import { sendDataToApp } from "./backgroundHelpers/sendDataToApp";
+import { getErrorMessage } from "./backgroundHelpers/errorMessage";
 
 console.log("Background service worker loaded");
-
 
 const allowedHost = "leetcode.com";
 const allowedPathPrefix = "/problems/";
@@ -47,7 +45,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "QUESTION_URL") {
     const url = message.url;
@@ -71,6 +68,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       })
       .catch((err) => {
         console.error("❌ Error in fetchData:", err);
+        const errResponse= getErrorMessage(err);
+        sendDataToApp({"error" : errResponse});
         sendResponse({ received: false, error: String(err) });
       });
 
