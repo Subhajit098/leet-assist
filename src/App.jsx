@@ -5,8 +5,6 @@ import "./styles/App.css"
 import { sendConfirmationToContentFromApp } from "./appHelpers/sendConfirmationToContentFromApp.js";
 
 
-
-
 function App() {
 
   const initialState = {
@@ -128,7 +126,7 @@ useEffect(() => {
 
   return (
   <div className="parentBody">
-    <h2>🚀 LeetCode Buddy</h2>
+    <h2>🚀 Leet Assist</h2>
 
     {/* Disable button if we already have hints */}
     <button onClick={handleSeeHints} disabled={ state.clicked || !!state.dataFromBg?.hints?.length }>
