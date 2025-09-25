@@ -1,8 +1,9 @@
 /* HintPagination.css */
 .hintParent {
   padding: 1rem;
-  max-width: 400px;   /* wider for hints */
+  /* max-width: 400px;   wider for hints */
   margin: 0 auto;
+  max-width: 100%;   /* 👈 prevents exceeding parent width */
 }
 
 .hintChild {
