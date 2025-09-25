@@ -1,5 +1,5 @@
 // App.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer,useState } from "react";
 import HintPagination from "./components/HintPagination.jsx";
 import "./styles/App.css"
 import { sendConfirmationToContentFromApp } from "./appHelpers/sendConfirmationToContentFromApp.js";
@@ -8,20 +8,40 @@ import { sendConfirmationToContentFromApp } from "./appHelpers/sendConfirmationT
 
 
 function App() {
-  const [dataFromBg, setDataFromBg] = useState([]);
-  const [clicked, setClicked] = useState(false);
+
+  const initialState = {
+    clicked: false,
+    dataFromBg: [],
+    error: null,
+  };
+
+  function apiReducer(state, action) {
+    switch (action.type) {
+      case "FETCH_START":
+        return { clicked: true, dataFromBg: [], error: null };
+      case "FETCH_SUCCESS":
+        return { clicked: false, dataFromBg: action.payload, error: null };
+      case "FETCH_ERROR":
+        return { clicked: false, dataFromBg: null, error: action.payload };
+      case "RESET_VALUE": 
+        return { clicked: false, dataFromBg: [], error: null };
+      default:
+        return state;
+    }
+  }
+
+
+  const [state, dispatch] = useReducer(apiReducer, initialState);
+
 
   const handleSeeHints = () => {
     // Trigger the message to content.js
-
     sendConfirmationToContentFromApp();
-    setClicked(true);
+
+    // Update the state
+    dispatch({type: "FETCH_START"});
   };
 
-  const resetValue=()=>{
-    setDataFromBg([]);
-    setClicked(false);
-  }
 
 useEffect(() => {
   // Helper to get tab info as a promise
@@ -38,7 +58,9 @@ useEffect(() => {
     try {
       const tab = await getTab(tabId);
       console.log("Tab switched to:", tab.url);
-      resetValue();
+
+      // Update the state
+      dispatch({type: "RESET_VALUE"});
     } catch (err) {
       console.error("Error getting tab info:", err.message);
     }
@@ -63,7 +85,8 @@ useEffect(() => {
         }
 
         console.log(`Tab ${tabId} navigated to: ${newQUrl}`);
-        resetValue();
+        // Update the state
+        dispatch({type: "RESET_VALUE"});
       });
     }
   };
@@ -71,7 +94,10 @@ useEffect(() => {
   // Message listener from background
   const handleMessageFromBg = (message, sender, sendResponse) => {
     if (message?.type === "DATA_FROM_BACKGROUND_TO_APP") {
-      setDataFromBg(message.payload);
+      // setDataFromBg(message.payload);
+      dispatch({type: "FETCH_SUCCESS", payload: message.payload});
+
+      // send the response
       sendResponse({ received: true });
     }
     return true; // for async if needed
@@ -95,14 +121,14 @@ useEffect(() => {
     <h2>🚀 LeetCode Buddy</h2>
 
     {/* Disable button if we already have hints */}
-    <button onClick={handleSeeHints} disabled={clicked || !!dataFromBg?.hints?.length}>
+    <button onClick={handleSeeHints} disabled={state.clicked || !!state.dataFromBg?.hints?.length}>
       See hints!
     </button>
 
     <div className="childBody">
-      {dataFromBg?.hints ? (
-        <HintPagination data={dataFromBg.hints}/>
-      ) : clicked ? (
+      {state.dataFromBg?.hints ? (
+        <HintPagination data={state.dataFromBg.hints}/>
+      ) : state.clicked ? (
         <p>Fetching hints .....</p>
       ) : (
         <p>Click the button to fetch hints</p>
