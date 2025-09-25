@@ -1,14 +1,14 @@
-# 🚀 LeetCode Buddy – Chrome Extension
+# 🚀 Leet Assist – Chrome Extension
 
 A **React + Vite Chrome Extension** powered by the **OpenAI API** that helps you solve **LeetCode problems** by providing step-by-step hints without spoiling the full solution.
 
 ---
 
 ## ✨ Features
-- 🔍 **Context-aware hints** for LeetCode problems.
+- 🔍 **Context-aware hints** guided hints instead of full solutions. 
 - 🤖 **AI-powered** using the OpenAI API.
-- 🎯 **Popup UI** built with React + Vite.
-- 📌 **Sticky extension window** – only closes when you press the ❌ button.
+- 🎯 **Popup UI** built with React, Vite & Material UI. 
+- 📌 **Sticky window** – stays open while you navigate between problems.  
 - 🛠 Easy to install and run locally.
 
 ---
