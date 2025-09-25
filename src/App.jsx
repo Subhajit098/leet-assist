@@ -24,7 +24,7 @@ function App() {
       case "FETCH_ERROR":
         return { clicked: false, dataFromBg: null, error: action.payload };
       case "RESET_VALUE": 
-        return { clicked: false, dataFromBg: [], error: null };
+        return initialState;
       default:
         return state;
     }
@@ -93,12 +93,22 @@ useEffect(() => {
 
   // Message listener from background
   const handleMessageFromBg = (message, sender, sendResponse) => {
+
+    // listen for tab changes ocurred during fetching the API result : 
+    
+
     if (message?.type === "DATA_FROM_BACKGROUND_TO_APP") {
       // setDataFromBg(message.payload);
-      dispatch({type: "FETCH_SUCCESS", payload: message.payload});
 
-      // send the response
-      sendResponse({ received: true });
+      if(message.payload?.error){
+        dispatch({type: "FETCH_ERROR", payload: message.payload.error}) ;
+        sendResponse({received: false});
+      } else {
+        dispatch({type: "FETCH_SUCCESS", payload: message.payload});
+
+        // send the response
+        sendResponse({ received: true });
+      }
     }
     return true; // for async if needed
   };
@@ -121,12 +131,15 @@ useEffect(() => {
     <h2>🚀 LeetCode Buddy</h2>
 
     {/* Disable button if we already have hints */}
-    <button onClick={handleSeeHints} disabled={state.clicked || !!state.dataFromBg?.hints?.length}>
+    <button onClick={handleSeeHints} disabled={ state.clicked || !!state.dataFromBg?.hints?.length }>
       See hints!
     </button>
 
     <div className="childBody">
-      {state.dataFromBg?.hints ? (
+      { state.error ? (
+        <p>{state.error}</p>
+      ) : 
+      state.dataFromBg?.hints ? (
         <HintPagination data={state.dataFromBg.hints}/>
       ) : state.clicked ? (
         <p>Fetching hints .....</p>
