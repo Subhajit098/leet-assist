@@ -1,11 +1,54 @@
 .parentBody {
   padding: 1rem;
-  width: 400px;   /* instead of max-width:200px */
+  width: 100%;
+  max-width: 400px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 99vh;       /* 👈 important for stretching */
+  box-sizing: border-box;
+  overflow-x: hidden; /* 👈 prevents horizontal scroll */
 }
+
+.childBody {
+  flex: 1;   /* 👈 take available space */
+  max-width: 380px;
+  margin-bottom: 1rem;
+}
+
 
 .childBody {
   min-height: 150px;
   max-width: 380px;
   margin-bottom: 1rem;
 }
+
+button {
+  background: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s ease;
+  margin: 12px 0;  /* 👈 add spacing */
+}
+
+button:hover {
+  background: #1e40af;
+}
+
+button:disabled {
+  background: #9ca3af; /* gray */
+  cursor: not-allowed; /* changes cursor */
+  opacity: 0.6;        /* optional, looks dimmed */
+}
+
+
+
+
+
+
+
+

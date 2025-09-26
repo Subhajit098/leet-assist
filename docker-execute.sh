@@ -6,7 +6,7 @@ image_name="leet-assist:v1"
 # docker build and tag command : 
 echo "Executing docker build command....."
 API_KEY=$(grep '^VITE_API_KEY2=' .env | cut -d '=' -f2-)
-docker build --build-arg VITE_API_KEY2="$API_KEY" -t $image_name -f Dockerfile.dev .
+docker build --build-arg VITE_API_KEY2="$API_KEY" -t $image_name  .
 
 
 # docker run command : 

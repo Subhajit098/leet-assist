@@ -1,182 +1,186 @@
 // App.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import HintPagination from "./components/HintPagination.jsx";
 import "./styles/App.css"
-
-
-
-// using the tabs.query approach
-const sendConfirmationToContentFromApp = () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs.length === 0) {
-      console.warn("⚠️ No active tab found");
-      return;
-    }
-    const activeTabId = tabs[0].id;
-
-    // error handling to check if the content script is injected or not into the webpage 
-    chrome.scripting.executeScript(
-      {
-        target: { tabId: activeTabId }, // also fixed tabId reference
-        files: ["content.js"],
-      },
-      () => {
-        if (chrome.runtime.lastError) {
-          alert("Please refresh or try again later !");
-          console.error("❌ Could not inject content script:", chrome.runtime.lastError.message);
-          return;
-        }
-
-        chrome.tabs.sendMessage(
-          activeTabId,
-          { type: "CONFIRMATION_FROM_APP_TO_CONTENT" },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              console.warn("❌ Error sending to content:", chrome.runtime.lastError.message);
-              return;
-            }
-
-            if (response && response.status) {
-              console.log("✅ Response from Content:", response.status);
-            } else {
-              console.log("❌ Response didn't reach Content.js!");
-            }
-          }
-        );
-      }
-    ); 
-  });
-};
-
-
-async function getLastUrl() {
-  try {
-    const result = await chrome.storage.local.get(["latestQuestionUrl"]);
-    const lastUrl = result.latestQuestionUrl || null;
-    console.log("Last stored URL:", lastUrl);
-    return lastUrl;
-  } catch (err) {
-    console.error("Error reading from storage:", err);
-    return null;
-  }
-}
-
+import { sendConfirmationToContentFromApp } from "./appHelpers/sendConfirmationToContentFromApp.js";
+import { Container, AppBar, Toolbar, Typography, Box } from "@mui/material";
+import ErrorAlert from "./components/ErrorAlert.jsx";
+ErrorAlert;
+import FetchingHints from "./components/static/FetchingHints.jsx";
+import ClickTheButtonToFetchHints from "./components/static/ClickTheButtonToFetchHints.jsx";
+import Footer from "./components/static/Footer.jsx";
+import AppHeading from "./components/static/AppHeading.jsx";
+import DarkModeToggle from "./components/static/DarkModeToggle.jsx";
 
 
 function App() {
-  const [dataFromBg, setDataFromBg] = useState([]);
-  const [clicked, setClicked] = useState(false);
+
+  const initialState = {
+    clicked: false,
+    dataFromBg: [],
+    error: null,
+  };
+
+  function apiReducer(state, action) {
+    switch (action.type) {
+      case "FETCH_START":
+        return { clicked: true, dataFromBg: [], error: null };
+      case "FETCH_SUCCESS":
+        return { clicked: false, dataFromBg: action.payload, error: null };
+      case "FETCH_ERROR":
+        return { clicked: false, dataFromBg: null, error: action.payload };
+      case "RESET_VALUE":
+        return initialState;
+      default:
+        return state;
+    }
+  }
+
+
+  const [state, dispatch] = useReducer(apiReducer, initialState);
+
 
   const handleSeeHints = () => {
     // Trigger the message to content.js
-    sendConfirmationToContentFromApp();
-    setClicked(true);
+    sendConfirmationToContentFromApp()
+    .then((res)=>{
+      console.log("Success : ",res.message);
+
+      // Update the state
+      dispatch({ type: "FETCH_START" });
+    })
+    .catch((err)=>{
+      console.log("Error : ",err.error);
+      alert(err.error);
+    })
+    
+    return ;
   };
+
 
   useEffect(() => {
+    // Helper to get tab info as a promise
+    const getTab = (tabId) =>
+      new Promise((resolve, reject) => {
+        chrome.tabs.get(tabId, (tab) => {
+          if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+          else resolve(tab);
+        });
+      });
 
-    // Notify background that panel has mounted
-    chrome.runtime.sendMessage({ type: "PANEL_LOADED" }, (response) => {
-      console.log("Background response:", response.status);
-    });
-
-    const handleMessageFromBg = (message, sender, sendResponse) => {
-      if (message && message.type === "DATA_FROM_BACKGROUND_TO_APP") {
-          setDataFromBg((prevState)=>{
-            return message.payload;
-          });
-        // sendResponse to confirm receipt (optional)
-          sendResponse({ received: true });
-
-        // no need to return true here since we responded synchronously
-      }
-    };
-
-  // Define the tab change listener function so that it can handle the leetcode link discrepancy where the description is missing sometimes
-  const handleTabUpdate = (tabId, changeInfo, tab) => {
-  if (changeInfo.url) {
-    const newQUrl = changeInfo.url;
-
-  chrome.storage.local.get(["latestQuestionUrl"], async(result) => {
-      const lastQUrl = result.latestQuestionUrl || null;
-
-      // Skip reset if the only difference is /description/ or the new URL is same as the OLD URL
-      let condition1=((lastQUrl + "description/") === newQUrl ||
-          (newQUrl + "description/") === lastQUrl);
-      let condition2=(lastQUrl===newQUrl);
-      if (
-        lastQUrl &&
-        (condition1 || condition2)
-      ) {
-        console.log("⚠️ Ignoring /description/ ↔ base mismatch");
-        return;
-      }
-
-      // this piece of code is handled by the code in background.js for disabling the side panel
-      // console.log(`Trigger from App.js . Tab ${tabId} navigated to: ${newQUrl}`);
-      // await chrome.storage.local.remove("latestQuestionUrl");
-      // setDataFromBg([]);
-      // setClicked(false);
-      // window.close();
-      // return ;
-    });
-  }
-  };
-
-  // close side panel function 
-  async function closeSidePanel(msg){
-      if (msg?.type === "close-sidepanel") {
-        await chrome.storage.local.remove("latestQuestionUrl");
-        window.close();
-      }
-      return ;
-  }
-
-
-    chrome.runtime.onMessage.addListener(handleMessageFromBg);
-
-    // Add the listener for any tab changes
-    chrome.tabs.onUpdated.addListener(handleTabUpdate);
-
-
-    // 
-
-    // HANLDE THE closing side panel 
-    chrome.runtime.onMessage.addListener(closeSidePanel);
-
-
-    return () => {
-      // cleanup
+    // Called whenever active tab changes
+    const handleTabActivated = async ({ tabId }) => {
       try {
-        chrome.runtime.onMessage.removeListener(handleMessageFromBg);
-        chrome.tabs.onUpdated.removeListener(handleTabUpdate);
-        chrome.runtime.onMessage.removeListener(closeSidePanel);
-      } catch (e) {
-        console.warn("Error removing listener:", e);
+        const tab = await getTab(tabId);
+        console.log("Tab switched to:", tab.url);
+
+        // Update the state
+        dispatch({ type: "RESET_VALUE" });
+      } catch (err) {
+        console.error("Error getting tab info:", err.message);
       }
     };
 
-  }, []); // register once
+    // Called whenever tab URL updates
+    const handleTabUpdated = (tabId, changeInfo, tab) => {
+      if (changeInfo.url) {
+        const newQUrl = changeInfo.url;
+        chrome.storage.local.get(["latestQuestionUrl"], (result) => {
+          const lastQUrl = result.latestQuestionUrl || null;
+
+          // Skip if only difference is /description/
+          if (
+            lastQUrl &&
+            ((lastQUrl + "description/") === newQUrl ||
+              (newQUrl + "description/") === lastQUrl ||
+              lastQUrl === newQUrl)
+          ) {
+            console.log("⚠️ Ignoring /description/ ↔ base mismatch");
+            return;
+          }
+
+          console.log(`Tab ${tabId} navigated to: ${newQUrl}`);
+          // Update the state
+          dispatch({ type: "RESET_VALUE" });
+        });
+      }
+    };
+
+    // Message listener from background
+    const handleMessageFromBg = (message, sender, sendResponse) => {
+
+      // listen for tab changes ocurred during fetching the API result : 
+
+
+      if (message?.type === "DATA_FROM_BACKGROUND_TO_APP") {
+        // setDataFromBg(message.payload);
+
+        if (message.payload?.error) {
+          dispatch({ type: "FETCH_ERROR", payload: message.payload.error });
+          sendResponse({ received: false });
+        } else {
+          dispatch({ type: "FETCH_SUCCESS", payload: message.payload });
+
+          // send the response
+          sendResponse({ received: true });
+        }
+      }
+      return true; // for async if needed
+    };
+
+    // Attach listeners
+    chrome.runtime.onMessage.addListener(handleMessageFromBg);
+    chrome.tabs.onActivated.addListener(handleTabActivated);
+    chrome.tabs.onUpdated.addListener(handleTabUpdated);
+
+    // Cleanup on unmount
+    return () => {
+      chrome.runtime.onMessage.removeListener(handleMessageFromBg);
+      chrome.tabs.onActivated.removeListener(handleTabActivated);
+      chrome.tabs.onUpdated.removeListener(handleTabUpdated);
+    };
+  }, []);
 
   return (
-  <div className="parentBody">
-    <h2>🚀 LeetCode Buddy</h2>
+    <Container maxWidth="sm">
+      <Box display="flex" flexDirection="column" alignItems="center">
 
-    {/* Disable button if we already have hints */}
-    <button onClick={handleSeeHints} disabled={clicked || !!dataFromBg?.hints?.length}>
-      See hints!
-    </button>
+        {/* App content here  */}
 
-    <div className="childBody">
-      {dataFromBg?.hints ? (
-        <HintPagination data={dataFromBg.hints}/>
-      ) : clicked ? (
-        <p>Fetching hints .....</p>
-      ) : (
-        <p>Click the button to fetch hints</p>
-      )}
-    </div>
-  </div>
+        <div className="parentBody">
+          {/* Add the dark mode button before the heading so that it is placed at the right corner */}
+            <DarkModeToggle/>
+
+          {/* <h2>🚀 Leet Assist</h2> */}
+            <AppHeading/>
+
+          {/* Disable button if we already have hints */}
+          <button onClick={handleSeeHints} disabled={state.clicked || !!state.dataFromBg?.hints?.length}>
+            See hints!
+          </button>
+
+          <div className="childBody">
+            {state.error ? (
+              <ErrorAlert data={state.error}/>
+            ) :
+              state.dataFromBg?.hints ? (
+                <HintPagination data={state.dataFromBg.hints} />
+              ) : state.clicked ? (
+                <FetchingHints/>
+              ) : (
+                <ClickTheButtonToFetchHints/>
+              )}
+          </div>
+
+          <Footer/>
+
+        </div>
+
+
+      </Box>
+    </Container>
+
+
   );
 
 }
