@@ -35,11 +35,16 @@ A **React + Vite Chrome Extension** powered by the **OpenAI API** that helps you
 
 > These steps are for loading the extension locally during development.
 
-1. Clone or copy the extension source into a directory on your machine.
-2. Open Chrome and go to `chrome://extensions/`.
-3. Enable **Developer mode** (toggle in the top-right).
-4. Click **Load unpacked**, then select the extension directory (the folder containing `manifest.json`).
-5. The extension should appear in the toolbar. If the icon is hidden, click the puzzle icon and pin it for easy access.
+1. Clone or copy the extension source code into a directory on your machine.
+2. Create a .env file at the root of the folder and place key name as 
+`VITE_API_KEY2` inside the file. Yes you see it right its `VITE_API_KEY2`.
+3. Generate an openAI API key and place it in the `.env` file.
+4. Make sure you have ***node*** installed on your machine.
+5. Run `npm run dev` at the root of the source code.
+6. Open Chrome and go to `chrome://extensions/`.
+7. Enable **Developer mode** (toggle in the top-right).
+8. Click **Load unpacked**, then select the extension directory (the folder containing `manifest.json`, a `dist` folder will be generated as a result of the **build** command executed during the **5**-th step).
+9. The extension should appear in the toolbar. If the icon is hidden, click the puzzle icon and pin it for easy access.
 
 ---
 
