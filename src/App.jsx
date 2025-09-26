@@ -42,10 +42,19 @@ function App() {
 
   const handleSeeHints = () => {
     // Trigger the message to content.js
-    sendConfirmationToContentFromApp();
+    sendConfirmationToContentFromApp()
+    .then((res)=>{
+      console.log("Success : ",res.message);
 
-    // Update the state
-    dispatch({ type: "FETCH_START" });
+      // Update the state
+      dispatch({ type: "FETCH_START" });
+    })
+    .catch((err)=>{
+      console.log("Error : ",err.error);
+      alert(err.error);
+    })
+    
+    return ;
   };
 
 
