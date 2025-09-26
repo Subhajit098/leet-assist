@@ -2,12 +2,15 @@
 export function sendConfirmationToBgFromContent() {
   console.log("📥 Fetching current LeetCode URL...");
 
-  const url = window.location.href;
+  const url = new URL(window.location.href);
+
+  // check if the URL is belonging to any Leetcode problem page : 
+  console.log("URL name : " ,url);
 
   chrome.runtime.sendMessage(
     {
       type: "QUESTION_URL",
-      url,
+      url: url.href,
     },
     (response) => {
       if (chrome.runtime.lastError) {
