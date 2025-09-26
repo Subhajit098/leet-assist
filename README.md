@@ -40,7 +40,7 @@ A **React + Vite Chrome Extension** powered by the **OpenAI API** that helps you
 `VITE_API_KEY2` inside the file. Yes you see it right its `VITE_API_KEY2`.
 3. Generate an openAI API key and place it in the `.env` file.
 4. Make sure you have ***node*** installed on your machine.
-5. Run `npm run dev` at the root of the source code.
+5. Run `npm run build` at the root of the source code.
 6. Open Chrome and go to `chrome://extensions/`.
 7. Enable **Developer mode** (toggle in the top-right).
 8. Click **Load unpacked**, then select the extension directory (the folder containing `manifest.json`, a `dist` folder will be generated as a result of the **build** command executed during the **5**-th step).
